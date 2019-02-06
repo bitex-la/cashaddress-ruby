@@ -153,7 +153,7 @@ module Cashaddress
 
   def self.to_five_bit_array(array)
     array.each_slice(5).collect do |slice|
-      slice.zip([16, 8, 4, 2, 1]).map{|a,b| a * b}.sum
+      slice.zip([16, 8, 4, 2, 1]).map{|a,b| a * b}.inject(:+)
     end
   end
 
