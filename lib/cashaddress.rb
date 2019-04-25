@@ -15,6 +15,7 @@ module Cashaddress
   
   MAINNET_PREFIX = [2, 9, 20, 3, 15, 9, 14, 3, 1, 19, 8, 0]
   TESTNET_PREFIX = [2, 3, 8, 20, 5, 19, 20, 0]
+  REGTEST_PREFIX = [2, 3, 8, 18, 5, 7, 0]
 
   def self.to_legacy(cashaddress)
     unless match = /(.+?):(.+)/.match(cashaddress)
@@ -76,7 +77,7 @@ module Cashaddress
     encoded 
   end
 
-  def self.from_legacy(legacy_address)
+  def self.from_legacy(legacy_address, reg_test = false)
     bytes = [0]
     characters = legacy_address.split('')
 
@@ -124,14 +125,21 @@ module Cashaddress
       else raise Error.new("Unexpected version #{version}")
     end
 
-    make_cashaddress(kind, bytes[1..-5], is_main_net)
+    make_cashaddress(kind, bytes[1..-5], is_main_net, reg_test)
   end
 
-  def self.make_cashaddress(kind, hash, main_net)
+  def self.make_cashaddress(kind, hash, main_net, reg_test = false)
     packed = convert_bits( [ kind << 3] + hash, 8, 5, true)
     raise Error.new("Can't pack Cashaddress") unless packed
 
-    prefix = main_net ? MAINNET_PREFIX.clone : TESTNET_PREFIX.clone
+    prefix, address = if reg_test
+                        [REGTEST_PREFIX.clone, 'bchreg:']
+                      elsif main_net
+                        [MAINNET_PREFIX.clone, 'bitcoincash:']
+                      else
+                        [TESTNET_PREFIX.clone, 'bchtest:']
+                      end
+
     encoded = prefix.concat(packed)
     moduled = polymod(encoded + [0] * 8)
     checksum = 8.times.map do |i|
@@ -139,8 +147,6 @@ module Cashaddress
         .split('').map(&:to_i)
       to_five_bit_array(shifted).first
     end
-
-    address = main_net ? "bitcoincash:" : "bchtest:"
 
     address << (packed + checksum).map{|b| CHARSET[b] }.join('')
 
@@ -153,7 +159,7 @@ module Cashaddress
 
   def self.to_five_bit_array(array)
     array.each_slice(5).collect do |slice|
-      slice.zip([16, 8, 4, 2, 1]).map{|a,b| a * b}.sum
+      slice.zip([16, 8, 4, 2, 1]).map{|a,b| a * b}.inject(:+)
     end
   end
 
