@@ -26,6 +26,22 @@ RSpec.describe Cashaddress do
       expect(Cashaddress.from_legacy(legacy.to_s)).to eq cashaddress
     end
   end
+
+  {
+    'mrLC19Je2BuWQDkWSTriGYPyQJXKkkBmCx' => 'bchreg:qpm2qsznhks23z7629mms6s4cwef74vcwv6ycwvz78',
+    'mz3ooahhEEzjbXR2VUKP3XACBCwF5zhQBy' => 'bchreg:qr95sy3j9xwd2ap32xkykttr4cvcu7as4y3w7lzdc7',
+    'mfctJGAVEWkZgfxV9zy1AjNFuXsKi2VXB8' => 'bchreg:qqq3728yw0y47sqn6l2na30mcw6zm78dzqahhfylwe',
+    '2N44ThNe8NXHyv4bsX8AoVCXquBRW94Ls7W' => 'bchreg:ppm2qsznhks23z7629mms6s4cwef74vcwvdp9ptp96',
+    '2NBn5Vp3BaaPD7NGPa8dUGBJ4g5qRXq92wG' => 'bchreg:pr95sy3j9xwd2ap32xkykttr4cvcu7as4yxtrs9wrr',
+    '2MsM9zVVyar93CWorEfH6PPW8QQmW3s1uh6' => 'bchreg:pqq3728yw0y47sqn6l2na30mcw6zm78dzq2j2xru4y',
+  }.each do |legacy, cashaddress|
+    it "translates #{cashaddress} to legacy (regtest)" do
+      expect(Cashaddress.to_legacy(cashaddress, true)).to eq legacy
+    end
+    it "translates #{legacy} to cashaddress (regtest)" do
+      expect(Cashaddress.from_legacy(legacy.to_s, true)).to eq cashaddress
+    end
+  end
   
   {
     'needs a prefix' =>   'pqq3728yw0y47sqn6l2na30mcw6zm78dzq5ucqzc37',
