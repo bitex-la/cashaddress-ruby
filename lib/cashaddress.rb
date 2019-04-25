@@ -17,13 +17,21 @@ module Cashaddress
   TESTNET_PREFIX = [2, 3, 8, 20, 5, 19, 20, 0]
   REGTEST_PREFIX = [2, 3, 8, 18, 5, 7, 0]
 
-  def self.to_legacy(cashaddress)
+  def self.to_legacy(cashaddress, reg_test = false)
     unless match = /(.+?):(.+)/.match(cashaddress)
       raise Error.new("Malformed cashaddress: #{cashaddress}")
     end
     
     is_mainnet = match.captures.first == 'bitcoincash'
-    prefix = is_mainnet ? MAINNET_PREFIX.clone : TESTNET_PREFIX.clone
+
+    prefix = if reg_test
+               REGTEST_PREFIX.clone
+             elsif is_mainnet
+               MAINNET_PREFIX.clone
+             else
+               TESTNET_PREFIX.clone
+             end
+
     raw_payload = match.captures.last.split('').map{|m| CHARSET_LOOKUP[m] }
     
     if polymod(prefix + raw_payload) != 0
@@ -150,8 +158,8 @@ module Cashaddress
 
     address << (packed + checksum).map{|b| CHARSET[b] }.join('')
 
-    if address.size != 54 && address.size != 50
-      raise Error.new("Address is not 50 or 54 characters long #{address}")
+    if address.size != 54 && address.size != 49 && address.size != 50
+      raise Error.new("Address is not 49 or 50 or 54 characters long #{address}")
     end
     
     address
